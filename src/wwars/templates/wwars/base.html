@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+{% block title %}
+{% endblock %}
+{% block includes %}
+    {{ block.super }}
+    <script src="{{ STATIC_URL }}wwars/plugins/angularjs/angular.js"></script>
+    <script src="{{ STATIC_URL }}wwars/plugins/jquery/jquery-2.0.3.js"></script>
+    <script src="{{ STATIC_URL }}wwars/plugins/jquery/jquery.cookie.js"></script>
+{% endblock %}
+</head>
+<body>
+{% block body %}
+{% endblock %}
+</body>
+</html>

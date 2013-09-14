@@ -1,0 +1,7 @@
+{% extends 'wwars/base.html' %}
+{% block includes %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}map/plugins/leaflet/leaflet.css" />
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}map/css/map-common.css" />
+<script src="{{ STATIC_URL }}map/plugins/leaflet/leaflet.js"></script>
+{% endblock %}

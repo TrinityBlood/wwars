@@ -1,0 +1,1 @@
+./manage.py runfcgi --traceback host=127.0.0.1 port=8000 daemonize=False debug=True

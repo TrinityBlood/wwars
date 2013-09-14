@@ -1,0 +1,23 @@
+
+server {
+    listen 127.0.0.1:8100;
+    server_name wwars.my;
+    access_log /path_to_wwars//wwars/logs/access.log;
+    error_log /path_to_wwars/wwars/logs/error.log;
+
+    location /static/ {
+        alias /path_to_wwarss/wwars/static/;
+        expires 1m;
+    }
+
+    location /media/ { 
+        alias /path_to_wwars/wwars/media/;
+        expires 30d;
+    }
+
+    location / {
+        include fastcgi_params;
+	fastcgi_param  PATH_INFO          $fastcgi_script_name;
+        fastcgi_pass 127.0.0.1:8000;
+    }
+}

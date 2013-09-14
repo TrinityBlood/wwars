@@ -1,0 +1,43 @@
+{% extends 'wwars/base.html' %}
+{% block includes %}
+    {{ block.super }}
+    <script src="{{ STATIC_URL }}wwars/js/ws.js"></script>
+    <script src="{{ STATIC_URL }}wwars/plugins/sockjs/sockjs-0.3.4.js"></script>
+{% endblock %}
+{% block body %}
+    <div id="go">Lets go</div>
+    <div id="message"></div>
+    <script>
+        sendData = function(url) {
+            var csrftoken = $.cookie('csrftoken');
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            });
+            $.ajax({
+                url: url,
+                data: {msg: 'first thread'},
+                type: 'POST',
+                statusCode: {
+                    403: function() {
+                        $('#message').html('forbidden');
+                    }
+                },
+                success: function(data, result, xhr) {
+                    $('#message').html('sent');
+                }
+            });
+        }
+        $(document).ready(function() {
+            $('#go').click(function() {
+                sendData('thread/1/');
+            })
+            var thread_id = 1;
+            sock = new SockJS('http://127.0.0.1:8001');
+            sock.onmessage = function(e) {
+               $('#message').html(e.data);
+            };
+        });
+    </script>
+{% endblock %}
