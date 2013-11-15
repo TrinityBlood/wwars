@@ -1,18 +1,19 @@
 from twisted.internet import reactor, protocol as twisted_protocol, defer
 from txsockjs.factory import SockJSFactory
 
-import pika
+from pika import ConnectionParameters, PlainCredentials
 from pika.adapters.twisted_connection import TwistedProtocolConnection
 
 from twisted.python import log
 
+from django.conf import settings
+
 
 class AmqpSubProtocol(TwistedProtocolConnection):
     def __init__(self, host, port,
-                 user, password, vhost
-                 ):
-        parameters = pika.ConnectionParameters(
-            credentials=pika.PlainCredentials(user, password),
+                 user, password, vhost):
+        parameters = ConnectionParameters(
+            credentials=PlainCredentials(user, password),
             host=host,
             port=port,
             virtual_host=vhost,
@@ -21,7 +22,6 @@ class AmqpSubProtocol(TwistedProtocolConnection):
         super(AmqpSubProtocol, self).__init__(parameters)
         self.on_handshaking_made = defer.Deferred()
 
-
     def connectionMade(self):
         super(AmqpSubProtocol, self).connectionMade()
         self.ready.addCallback(lambda _: self.handshakingMade())
@@ -29,7 +29,6 @@ class AmqpSubProtocol(TwistedProtocolConnection):
 
     def queueDeclare(self, channel):
         channel.queue_declare(queue='thread')
-
 
     @defer.inlineCallbacks
     def handshakingMade(self):
@@ -48,12 +47,12 @@ class AmqpSubProtocol(TwistedProtocolConnection):
 class AmqpSubFactory(twisted_protocol.ReconnectingClientFactory):
     protocol = AmqpSubProtocol
 
-    def __init__(self, host, port, user, password, vhost):
-        self._host = host
-        self._port = port
-        self._user = user
-        self._password = password
-        self._vhost = vhost
+    def __init__(self, **credentials):
+        self._host = credentials['host']
+        self._port = credentials['port']
+        self._user = credentials['user']
+        self._password = credentials['password']
+        self._vhost = credentials['vhost']
 
     def buildProtocol(self, addr):
         self.proto = self.protocol(
@@ -90,23 +89,18 @@ class MainRoomProtocol(twisted_protocol.Protocol):
 
     def dataReceived(self, data):
         pass
- 
- 
+
+
 class MainRoomFactory(twisted_protocol.Factory):
     protocol = MainRoomProtocol
     sockets = {}
     amqp = None
 
     def __init__(self):
-        factory = AmqpSubFactory(
-            'localhost', 5672,
-            'tstrinity', '5008849a',
-            'wwars'
-        )
+        factory = AmqpSubFactory(**settings.AMQPS['default'])
         reactor.connectTCP('localhost', 5672, factory)
         self.amqp = factory.buildProtocol(None)
         self.amqp.consumeFrom(self.callback, 'thread')
-
 
     def callback(self, ch, method, properties, body):
         print 'in callback'
@@ -118,5 +112,6 @@ class MainRoomFactory(twisted_protocol.Factory):
         return ws_protocol
 
 
-reactor.listenTCP(8001, SockJSFactory(MainRoomFactory()))
-reactor.run()
+def run():
+    reactor.listenTCP(8001, SockJSFactory(MainRoomFactory()))
+    reactor.run()
