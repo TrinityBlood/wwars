@@ -1,10 +1,9 @@
-from twisted.internet import reactor, protocol as twisted_protocol, defer
-from txsockjs.factory import SockJSFactory
 
 from pika import ConnectionParameters, PlainCredentials
 from pika.adapters.twisted_connection import TwistedProtocolConnection
-
+from twisted.internet import reactor, protocol as twisted_protocol, defer
 from twisted.python import log
+from txsockjs.factory import SockJSFactory
 
 from django.conf import settings
 
@@ -74,8 +73,6 @@ class MainRoomProtocol(twisted_protocol.Protocol):
         self.addr = addr
 
     def connectionMade(self):
-        print("Connection Made!")
-        print dir(self.factory)
         print self.factory.sockets
 
     def send(self, channel, message):
@@ -98,7 +95,9 @@ class MainRoomFactory(twisted_protocol.Factory):
 
     def __init__(self):
         factory = AmqpSubFactory(**settings.AMQPS['default'])
-        reactor.connectTCP('localhost', 5672, factory)
+        host = settings.AMQPS['default']['host']
+        port = settings.AMQPS['default']['port']
+        reactor.connectTCP(host, port, factory)
         self.amqp = factory.buildProtocol(None)
         self.amqp.consumeFrom(self.callback, 'thread')
 
